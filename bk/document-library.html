@@ -198,6 +198,12 @@
         .cw-pdf { max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #525659; padding: 0.5rem; }
         .cw-pdf canvas { display: block; margin: 0 auto 0.5rem; max-width: 100%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .cw-pdf-loading, .cw-pdf-error { color: #fff; text-align: center; padding: 2.5rem 1rem; font-size: 0.9rem; }
+        .cw-pdf-detail {
+            margin: 0.75rem auto 0; max-width: 90%;
+            font-family: ui-monospace, Menlo, monospace; font-size: 0.72rem;
+            color: #ffd9d0; background: rgba(0,0,0,0.25);
+            padding: 0.5rem 0.7rem; border-radius: 8px; word-break: break-word;
+        }
         .cw-pdf-open {
             display: block; margin: 1.25rem auto 0; border: none; cursor: pointer;
             background: #fff; color: var(--bk-red); font-weight: 700; font-size: 0.9rem;
@@ -521,21 +527,27 @@
         function renderPdf(url) {
             const container = document.getElementById('pdf-pages');
             let done = false;
-            // Fallback if PDF.js can't load/render (blocked CDN, sandbox, timeout): offer to open the PDF
-            // natively, which iOS renders fine (the blank-page issue only happens with <iframe src=pdf>).
-            const fallback = () => {
+            let stage = 'init';
+            // DIAGNOSTIC fallback: shows the exact reason on screen so we can see why it fails in the
+            // Staffbase iOS webview (blocked script / missing lib / worker / sandbox origin / timeout).
+            const fallback = (reason) => {
                 if (done) return; done = true;
-                container.innerHTML = `<div class="cw-pdf-error">${t.docError}<button class="cw-pdf-open" id="pdf-open">${t.openDoc}</button></div>`;
+                const detail = reason ? `<div class="cw-pdf-detail">⚙︎ ${String(reason).slice(0, 300)}</div>` : '';
+                container.innerHTML = `<div class="cw-pdf-error">${t.docError}${detail}<button class="cw-pdf-open" id="pdf-open">${t.openDoc}</button></div>`;
                 const b = document.getElementById('pdf-open');
                 if (b) b.addEventListener('click', () => openExternal(url));
             };
-            const timer = setTimeout(fallback, 8000);
+            const timer = setTimeout(() => fallback('timeout 12s (étape: ' + stage + ')'), 12000);
             const draw = () => {
                 if (done) return;
-                if (!window.pdfjsLib) { clearTimeout(timer); fallback(); return; }
-                pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-                pdfjsLib.getDocument(url).promise.then(async pdf => {
+                if (!window.pdfjsLib) { clearTimeout(timer); return fallback('pdfjsLib introuvable après chargement du script'); }
+                try { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; } catch (e) { clearTimeout(timer); return fallback('workerSrc: ' + (e && e.message || e)); }
+                stage = 'getDocument';
+                let task;
+                try { task = pdfjsLib.getDocument(url); } catch (e) { clearTimeout(timer); return fallback('getDocument(): ' + (e && e.message || e)); }
+                task.promise.then(async pdf => {
                     if (done) return; done = true; clearTimeout(timer);
+                    stage = 'render';
                     container.innerHTML = '';
                     const dpr = Math.min(window.devicePixelRatio || 1, 2);
                     for (let i = 1; i <= pdf.numPages; i++) {
@@ -549,13 +561,14 @@
                         container.appendChild(canvas);
                         await page.render({ canvasContext: canvas.getContext('2d'), viewport, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null }).promise;
                     }
-                }).catch(() => { clearTimeout(timer); fallback(); });
+                }).catch(e => { clearTimeout(timer); done = false; fallback((e && e.name ? e.name + ': ' : '') + (e && e.message || e)); });
             };
+            stage = 'load-script';
             if (window.pdfjsLib) { draw(); return; }
             const s = document.createElement('script');
             s.src = PDFJS_LIB;
             s.onload = draw;
-            s.onerror = () => { clearTimeout(timer); fallback(); };
+            s.onerror = () => { clearTimeout(timer); fallback('échec de chargement de ' + PDFJS_LIB + ' (script bloqué par le sandbox/CSP ?)'); };
             document.head.appendChild(s);
         }
         function closeViewer() {
