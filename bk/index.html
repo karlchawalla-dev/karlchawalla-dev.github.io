@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Gallery</title>
+    <style>
+        :root {
+            --bk-red: #D62300;
+            --bk-gold: #F5BD1F;
+            --bk-brown: #6E6557;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f3f3;
+            color: #1a1a1a;
+            padding: 1.5rem;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        header {
+            background: var(--bk-red);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 14px;
+            margin-bottom: 1.5rem;
+        }
+        header h1 { font-size: 1.4rem; }
+        header p { color: var(--bk-gold); font-weight: 600; margin-top: 0.25rem; }
+        .grid { display: grid; gap: 0.75rem; }
+        a.card {
+            display: block;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--bk-gold);
+        }
+        a.card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+        a.card .name { font-weight: 700; }
+        a.card .desc { font-size: 0.85rem; color: #6b7280; margin-top: 0.15rem; }
+        .empty { background: white; border-radius: 12px; padding: 2rem; text-align: center; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Widget Gallery</h1>
+        <p>Staffbase embeddable widgets</p>
+    </header>
+    <div class="grid" id="grid">
+        <!-- Widget cards are added here as widgets land in this folder. -->
+        <div class="empty">No widgets yet — the first one will appear here.</div>
+    </div>
+
+    <script>
+        // List widget files here as they're added (filename + description).
+        const widgets = [
+            // { file: 'document-library.html', name: 'Document Library', desc: 'Bibliotheque — browse and search documents' },
+        ];
+        const grid = document.getElementById('grid');
+        if (widgets.length) {
+            grid.innerHTML = widgets.map(w =>
+                `<a class="card" href="${w.file}"><div class="name">${w.name}</div><div class="desc">${w.desc}</div></a>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>
