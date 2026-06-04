@@ -195,7 +195,14 @@
         .cw-modal-close:hover { background: rgba(255,255,255,0.2); }
         .cw-video-frame { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
         .cw-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-        .cw-doc-frame iframe { width: 100%; height: 70vh; border: 0; background: #fff; display: block; }
+        .cw-pdf { max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #525659; padding: 0.5rem; }
+        .cw-pdf canvas { display: block; margin: 0 auto 0.5rem; max-width: 100%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .cw-pdf-loading, .cw-pdf-error { color: #fff; text-align: center; padding: 2.5rem 1rem; font-size: 0.9rem; }
+        .cw-pdf-open {
+            display: block; margin: 1.25rem auto 0; border: none; cursor: pointer;
+            background: #fff; color: var(--bk-red); font-weight: 700; font-size: 0.9rem;
+            padding: 0.6rem 1.4rem; border-radius: 10px;
+        }
         .cw-doc-actions { padding: 0.75rem; text-align: center; background: #fff; border-top: 1px solid var(--border, #e5e7eb); }
         .cw-doc-actions a {
             display: inline-block; background: var(--bk-red); color: #fff;
@@ -317,37 +324,37 @@
                 title: 'Mes docs', searchPh: 'Rechercher...',
                 tabAll: 'Tous', tabTutos: 'Tutos', tabOperations: 'Opérations', tabRH: 'RH', tabSecurite: 'Sécurité', tabMarketing: 'Marketing',
                 statVideos: 'Vidéos', statDocs: 'Docs', statUpdates: 'Màj', updatesValue: 'Semaine',
-                empty: 'Aucun document trouvé', openDoc: 'Ouvrir le document'
+                empty: 'Aucun document trouvé', downloadDoc: 'Télécharger le document', openDoc: 'Ouvrir le PDF', docLoading: 'Chargement du document…', docError: 'Impossible d\'afficher le document. Utilisez le bouton ci-dessous.'
             },
             'en-US': {
                 title: 'My docs', searchPh: 'Search...',
                 tabAll: 'All', tabTutos: 'Tutorials', tabOperations: 'Operations', tabRH: 'HR', tabSecurite: 'Safety', tabMarketing: 'Marketing',
                 statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'This week',
-                empty: 'No documents found', openDoc: 'Open document'
+                empty: 'No documents found', downloadDoc: 'Download document', openDoc: 'Open the PDF', docLoading: 'Loading document…', docError: 'Unable to display the document. Use the button below.'
             },
             'en-GB': {
                 title: 'My docs', searchPh: 'Search...',
                 tabAll: 'All', tabTutos: 'Tutorials', tabOperations: 'Operations', tabRH: 'HR', tabSecurite: 'Safety', tabMarketing: 'Marketing',
                 statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'This week',
-                empty: 'No documents found', openDoc: 'Open document'
+                empty: 'No documents found', downloadDoc: 'Download document', openDoc: 'Open the PDF', docLoading: 'Loading document…', docError: 'Unable to display the document. Use the button below.'
             },
             'es': {
                 title: 'Mis docs', searchPh: 'Buscar...',
                 tabAll: 'Todos', tabTutos: 'Tutoriales', tabOperations: 'Operaciones', tabRH: 'RR. HH.', tabSecurite: 'Seguridad', tabMarketing: 'Marketing',
                 statVideos: 'Vídeos', statDocs: 'Docs', statUpdates: 'Actual.', updatesValue: 'Esta semana',
-                empty: 'No se encontraron documentos', openDoc: 'Abrir documento'
+                empty: 'No se encontraron documentos', downloadDoc: 'Descargar documento', openDoc: 'Abrir el PDF', docLoading: 'Cargando documento…', docError: 'No se puede mostrar el documento. Usa el botón de abajo.'
             },
             'de': {
                 title: 'Meine Docs', searchPh: 'Suchen...',
                 tabAll: 'Alle', tabTutos: 'Tutorials', tabOperations: 'Betrieb', tabRH: 'HR', tabSecurite: 'Sicherheit', tabMarketing: 'Marketing',
                 statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'Diese Woche',
-                empty: 'Keine Dokumente gefunden', openDoc: 'Dokument öffnen'
+                empty: 'Keine Dokumente gefunden', downloadDoc: 'Dokument herunterladen', openDoc: 'PDF öffnen', docLoading: 'Dokument wird geladen…', docError: 'Dokument kann nicht angezeigt werden. Bitte Button unten nutzen.'
             },
             'ja': {
                 title: 'マイドキュメント', searchPh: '検索...',
                 tabAll: 'すべて', tabTutos: 'チュートリアル', tabOperations: 'オペレーション', tabRH: '人事', tabSecurite: '安全', tabMarketing: 'マーケティング',
                 statVideos: '動画', statDocs: '資料', statUpdates: '更新', updatesValue: '今週',
-                empty: 'ドキュメントが見つかりません', openDoc: 'ドキュメントを開く'
+                empty: 'ドキュメントが見つかりません', downloadDoc: 'ドキュメントをダウンロード', openDoc: 'PDFを開く', docLoading: 'ドキュメントを読み込み中…', docError: 'ドキュメントを表示できません。下のボタンをご利用ください。'
             }
         };
         function pickLang() {
@@ -497,11 +504,56 @@
             const modal = document.getElementById('viewer');
             const body = document.getElementById('viewer-body');
             document.getElementById('viewer-title').textContent = d.title;
+            const fileName = (d.title || 'document').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
             body.innerHTML =
-                `<div class="cw-doc-frame"><iframe src="${d.url}#view=FitH" title="${d.title}"></iframe></div>` +
-                `<div class="cw-doc-actions"><a href="${d.url}" target="_blank" rel="noopener">${t.openDoc}</a></div>`;
+                `<div class="cw-pdf" id="pdf-pages"><div class="cw-pdf-loading">${t.docLoading}</div></div>` +
+                `<div class="cw-doc-actions"><a href="${d.url}" download="${fileName}">${t.downloadDoc}</a></div>`;
             modal.classList.add('open');
             document.body.style.overflow = 'hidden';
+            renderPdf(d.url);
+        }
+
+        /* Render a PDF to canvases with PDF.js — works inside iOS webviews where <iframe src=pdf> shows blank. */
+        const PDFJS_VER = '3.11.174';
+        function renderPdf(url) {
+            const container = document.getElementById('pdf-pages');
+            let done = false;
+            // Fallback if PDF.js can't load/render (blocked CDN, sandbox, timeout): offer to open the PDF
+            // natively, which iOS renders fine (the blank-page issue only happens with <iframe src=pdf>).
+            const fallback = () => {
+                if (done) return; done = true;
+                container.innerHTML = `<div class="cw-pdf-error">${t.docError}<button class="cw-pdf-open" id="pdf-open">${t.openDoc}</button></div>`;
+                const b = document.getElementById('pdf-open');
+                if (b) b.addEventListener('click', () => openExternal(url));
+            };
+            const timer = setTimeout(fallback, 8000);
+            const draw = () => {
+                if (done) return;
+                if (!window.pdfjsLib) { clearTimeout(timer); fallback(); return; }
+                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VER}/pdf.worker.min.js`;
+                pdfjsLib.getDocument(url).promise.then(async pdf => {
+                    if (done) return; done = true; clearTimeout(timer);
+                    container.innerHTML = '';
+                    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width * dpr;
+                        canvas.height = viewport.height * dpr;
+                        canvas.style.width = '100%';
+                        canvas.style.height = 'auto';
+                        container.appendChild(canvas);
+                        await page.render({ canvasContext: canvas.getContext('2d'), viewport, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null }).promise;
+                    }
+                }).catch(() => { clearTimeout(timer); fallback(); });
+            };
+            if (window.pdfjsLib) { draw(); return; }
+            const s = document.createElement('script');
+            s.src = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VER}/pdf.min.js`;
+            s.onload = draw;
+            s.onerror = () => { clearTimeout(timer); fallback(); };
+            document.head.appendChild(s);
         }
         function closeViewer() {
             const modal = document.getElementById('viewer');
