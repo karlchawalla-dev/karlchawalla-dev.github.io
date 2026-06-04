@@ -396,7 +396,7 @@
         const docs = [
             { type: 'doc',   category: 'rh',         daysAgo: 3,  author: 'Direction RH',
               title: "Guide de l'équipier 2026", desc: 'Toutes les informations RH : congés, rémunération, avantages',
-              url: 'guide-equipier-2026.pdf' },
+              url: 'https://bkdemo.staffbase.rocks/api/media/secure/external/v2/raw/upload/8931b0ad179bbd1a91160d202c2ad812.pdf' },
             { type: 'doc',   category: 'operations', daysAgo: 1,  author: 'Direction Opérations',
               title: 'Standards de qualité 2026', desc: 'Guide complet des standards de qualité et procédures opérationnelles' },
             { type: 'video', category: 'securite',   daysAgo: 5,  author: 'Sécurité Alimentaire', duration: '18:45',
@@ -484,7 +484,13 @@
                         // Many YouTube videos disable embedding (error 150/153) — open directly in the YouTube app / browser.
                         openExternal('https://www.youtube.com/watch?v=' + d.youtube);
                     } else if (d.url) {
-                        openViewer(d);
+                        // Same-origin PDF → render inline with PDF.js. Cross-origin (e.g. hosted in Staffbase)
+                        // → open directly so the Staffbase app displays it in its native document viewer
+                        // (cross-origin can't be fetched/rendered inline due to CORS).
+                        const isAbsolute = /^https?:\/\//i.test(d.url);
+                        const sameOrigin = !isAbsolute || d.url.indexOf(location.origin + '/') === 0;
+                        if (sameOrigin) openViewer(d);
+                        else openExternal(d.url);
                     }
                 });
             });
