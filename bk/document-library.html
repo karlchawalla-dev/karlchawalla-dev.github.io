@@ -195,7 +195,14 @@
         .cw-modal-close:hover { background: rgba(255,255,255,0.2); }
         .cw-video-frame { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
         .cw-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-        .cw-doc-frame iframe { width: 100%; height: 75vh; border: 0; background: #fff; display: block; }
+        .cw-doc-frame iframe { width: 100%; height: 70vh; border: 0; background: #fff; display: block; }
+        .cw-doc-actions { padding: 0.75rem; text-align: center; background: #fff; border-top: 1px solid var(--border, #e5e7eb); }
+        .cw-doc-actions a {
+            display: inline-block; background: var(--bk-red); color: #fff;
+            text-decoration: none; font-weight: 700; font-size: 0.9rem;
+            padding: 0.6rem 1.4rem; border-radius: 10px;
+        }
+        .cw-doc-actions a:active { transform: scale(0.98); }
         .play-btn {
             width: 40px; height: 40px;
             border-radius: 50%;
@@ -310,37 +317,37 @@
                 title: 'Mes docs', searchPh: 'Rechercher...',
                 tabAll: 'Tous', tabTutos: 'Tutos', tabOperations: 'Opérations', tabRH: 'RH', tabSecurite: 'Sécurité', tabMarketing: 'Marketing',
                 statVideos: 'Vidéos', statDocs: 'Docs', statUpdates: 'Màj', updatesValue: 'Semaine',
-                empty: 'Aucun document trouvé'
+                empty: 'Aucun document trouvé', openDoc: 'Ouvrir le document'
             },
             'en-US': {
                 title: 'My docs', searchPh: 'Search...',
                 tabAll: 'All', tabTutos: 'Tutorials', tabOperations: 'Operations', tabRH: 'HR', tabSecurite: 'Safety', tabMarketing: 'Marketing',
                 statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'This week',
-                empty: 'No documents found'
+                empty: 'No documents found', openDoc: 'Open document'
             },
             'en-GB': {
                 title: 'My docs', searchPh: 'Search...',
                 tabAll: 'All', tabTutos: 'Tutorials', tabOperations: 'Operations', tabRH: 'HR', tabSecurite: 'Safety', tabMarketing: 'Marketing',
                 statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'This week',
-                empty: 'No documents found'
+                empty: 'No documents found', openDoc: 'Open document'
             },
             'es': {
                 title: 'Mis docs', searchPh: 'Buscar...',
                 tabAll: 'Todos', tabTutos: 'Tutoriales', tabOperations: 'Operaciones', tabRH: 'RR. HH.', tabSecurite: 'Seguridad', tabMarketing: 'Marketing',
                 statVideos: 'Vídeos', statDocs: 'Docs', statUpdates: 'Actual.', updatesValue: 'Esta semana',
-                empty: 'No se encontraron documentos'
+                empty: 'No se encontraron documentos', openDoc: 'Abrir documento'
             },
             'de': {
                 title: 'Meine Docs', searchPh: 'Suchen...',
                 tabAll: 'Alle', tabTutos: 'Tutorials', tabOperations: 'Betrieb', tabRH: 'HR', tabSecurite: 'Sicherheit', tabMarketing: 'Marketing',
                 statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'Diese Woche',
-                empty: 'Keine Dokumente gefunden'
+                empty: 'Keine Dokumente gefunden', openDoc: 'Dokument öffnen'
             },
             'ja': {
                 title: 'マイドキュメント', searchPh: '検索...',
                 tabAll: 'すべて', tabTutos: 'チュートリアル', tabOperations: 'オペレーション', tabRH: '人事', tabSecurite: '安全', tabMarketing: 'マーケティング',
                 statVideos: '動画', statDocs: '資料', statUpdates: '更新', updatesValue: '今週',
-                empty: 'ドキュメントが見つかりません'
+                empty: 'ドキュメントが見つかりません', openDoc: 'ドキュメントを開く'
             }
         };
         function pickLang() {
@@ -375,7 +382,8 @@
 
         const docs = [
             { type: 'doc',   category: 'rh',         daysAgo: 3,  author: 'Direction RH',
-              title: "Guide de l'équipier 2026", desc: 'Toutes les informations RH : congés, rémunération, avantages' },
+              title: "Guide de l'équipier 2026", desc: 'Toutes les informations RH : congés, rémunération, avantages',
+              url: 'guide-equipier-2026.pdf' },
             { type: 'doc',   category: 'operations', daysAgo: 1,  author: 'Direction Opérations',
               title: 'Standards de qualité 2026', desc: 'Guide complet des standards de qualité et procédures opérationnelles' },
             { type: 'video', category: 'securite',   daysAgo: 5,  author: 'Sécurité Alimentaire', duration: '18:45',
@@ -471,7 +479,9 @@
             if (d.youtube) {
                 body.innerHTML = `<div class="cw-video-frame"><iframe src="https://www.youtube.com/embed/${d.youtube}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
             } else if (d.url) {
-                body.innerHTML = `<div class="cw-doc-frame"><iframe src="${d.url}"></iframe></div>`;
+                body.innerHTML =
+                    `<div class="cw-doc-frame"><iframe src="${d.url}#view=FitH" title="${d.title}"></iframe></div>` +
+                    `<div class="cw-doc-actions"><a href="${d.url}" target="_blank" rel="noopener">${t.openDoc}</a></div>`;
             }
             modal.classList.add('open');
             document.body.style.overflow = 'hidden';
