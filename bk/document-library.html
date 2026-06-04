@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Document Library">
+    <meta name="widget-description" content="Searchable document & video library with category filters and stat cards">
+    <meta name="widget-tags" content="File Management, Communications, Learning">
+    <title>Mes docs</title>
+    <style>
+        :root {
+            --bk-red: #D62300;
+            --bk-gold: #F5BD1F;
+            --bk-gold-deep: #E0A500;
+            --bk-orange: #FF8732;
+            --bk-brown: #6E6557;
+            --cream: #FCF6E0;
+            --text: #1a1a1a;
+            --text-light: #6b7280;
+            --card: #ffffff;
+            --search-bg: #ededed;
+            --thumb-bg: #e9e9ee;
+            --shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            padding: 1rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .cw-header {
+            background: var(--bk-red);
+            color: #fff;
+            padding: 1.4rem 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+        }
+        .cw-header h1 { font-size: 1.5rem; font-weight: 800; }
+
+        /* Search */
+        .cw-search {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .cw-search svg {
+            position: absolute;
+            left: 1rem; top: 50%; transform: translateY(-50%);
+            width: 20px; height: 20px; color: var(--text-light);
+        }
+        .cw-search input {
+            width: 100%;
+            border: none;
+            background: var(--search-bg);
+            border-radius: 14px;
+            padding: 0.95rem 1rem 0.95rem 2.9rem;
+            font-size: 1rem;
+            color: var(--text);
+            outline: none;
+        }
+        .cw-search input::placeholder { color: var(--text-light); }
+
+        /* Category tabs */
+        .cw-tabs-wrap {
+            border: 1.5px solid var(--bk-red);
+            border-radius: 14px;
+            padding: 0.35rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .cw-tabs-wrap::-webkit-scrollbar { display: none; }
+        .cw-tabs {
+            display: flex;
+            gap: 0.25rem;
+            width: max-content;
+        }
+        .cw-tab {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .cw-tab.active {
+            background: var(--bk-red);
+            color: #fff;
+        }
+
+        /* Stat cards */
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+        }
+        .stat-card {
+            border: 2px solid;
+            border-radius: 16px;
+            padding: 0.9rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.12s, box-shadow 0.12s;
+            background: var(--card);
+        }
+        .stat-card:active { transform: scale(0.97); }
+        .stat-card.active { box-shadow: 0 0 0 3px rgba(214,35,0,0.15); }
+        .stat-icon {
+            width: 46px; height: 46px;
+            border-radius: 12px;
+            margin: 0 auto 0.55rem;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+        }
+        .stat-icon svg { width: 24px; height: 24px; }
+        .stat-label { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+        .stat-value { font-weight: 800; font-size: 1.15rem; margin-top: 0.15rem; }
+
+        .stat-card.videos { border-color: var(--bk-red); background: linear-gradient(160deg,#fff, #fdece9); }
+        .stat-card.videos .stat-icon { background: var(--bk-red); }
+        .stat-card.videos .stat-value { color: var(--bk-red); }
+
+        .stat-card.docs { border-color: var(--bk-gold); background: linear-gradient(160deg,#fff,#fdf8e3); }
+        .stat-card.docs .stat-icon { background: var(--bk-gold-deep); }
+        .stat-card.docs .stat-value { color: var(--bk-red); }
+
+        .stat-card.updates { border-color: var(--bk-orange); background: linear-gradient(160deg,#fff,#fff1e3); }
+        .stat-card.updates .stat-icon { background: var(--bk-orange); }
+        .stat-card.updates .stat-value { color: var(--bk-orange); }
+
+        /* Document list */
+        .doc-list { display: flex; flex-direction: column; gap: 0.85rem; }
+        .doc-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 0.9rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 0.85rem;
+        }
+        .doc-thumb {
+            width: 92px; min-width: 92px; height: 92px;
+            border-radius: 12px;
+            background: var(--thumb-bg);
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+            color: #9aa0aa;
+        }
+        .doc-thumb svg { width: 38px; height: 38px; }
+        .doc-thumb.video {
+            background: linear-gradient(135deg,#3a3a3a,#6e6557);
+        }
+        .play-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--bk-red);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .play-btn svg { width: 18px; height: 18px; color: #fff; margin-left: 2px; }
+        .duration {
+            position: absolute;
+            bottom: 6px; right: 6px;
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.12rem 0.35rem;
+            border-radius: 5px;
+            display: flex; align-items: center; gap: 0.2rem;
+        }
+        .duration svg { width: 10px; height: 10px; }
+
+        .doc-body { flex: 1; min-width: 0; }
+        .doc-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            margin-bottom: 0.35rem;
+        }
+        .badge-rh { background: #ede9fe; color: #7c3aed; }
+        .badge-operations { background: #dcfce7; color: #15803d; }
+        .badge-securite { background: #fee2e2; color: #dc2626; }
+        .badge-tutos { background: #dbeafe; color: #2563eb; }
+        .badge-marketing { background: #ffedd5; color: #c2410c; }
+
+        .doc-title { font-weight: 800; font-size: 1.02rem; line-height: 1.2; margin-bottom: 0.2rem; }
+        .doc-desc {
+            font-size: 0.88rem; color: var(--text-light); line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .doc-meta {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 0.6rem; gap: 0.5rem;
+        }
+        .doc-author { font-weight: 700; font-size: 0.82rem; color: var(--bk-brown); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .doc-date { font-size: 0.82rem; color: var(--text-light); white-space: nowrap; }
+
+        .empty {
+            text-align: center;
+            color: var(--text-light);
+            padding: 2.5rem 1rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cw-header">
+        <h1 data-i18n="title">Mes docs</h1>
+    </div>
+
+    <div class="cw-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="search" data-i18n-ph="searchPh" placeholder="Rechercher...">
+    </div>
+
+    <div class="cw-tabs-wrap">
+        <div class="cw-tabs" id="tabs"></div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-card videos" data-type="video">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+            </div>
+            <div class="stat-label" data-i18n="statVideos">Vidéos</div>
+            <div class="stat-value" id="count-videos">0</div>
+        </div>
+        <div class="stat-card docs" data-type="doc">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            </div>
+            <div class="stat-label" data-i18n="statDocs">Docs</div>
+            <div class="stat-value" id="count-docs">0</div>
+        </div>
+        <div class="stat-card updates" data-week="1">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="stat-label" data-i18n="statUpdates">Màj</div>
+            <div class="stat-value" data-i18n="updatesValue">Semaine</div>
+        </div>
+    </div>
+
+    <div class="doc-list" id="list"></div>
+
+    <script>
+    (function () {
+        /* ---------- i18n ---------- */
+        const T = {
+            'fr': {
+                title: 'Mes docs', searchPh: 'Rechercher...',
+                tabAll: 'Tous', tabTutos: 'Tutos', tabOperations: 'Opérations', tabRH: 'RH', tabSecurite: 'Sécurité', tabMarketing: 'Marketing',
+                statVideos: 'Vidéos', statDocs: 'Docs', statUpdates: 'Màj', updatesValue: 'Semaine',
+                empty: 'Aucun document trouvé'
+            },
+            'en-US': {
+                title: 'My docs', searchPh: 'Search...',
+                tabAll: 'All', tabTutos: 'Tutorials', tabOperations: 'Operations', tabRH: 'HR', tabSecurite: 'Safety', tabMarketing: 'Marketing',
+                statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'This week',
+                empty: 'No documents found'
+            },
+            'en-GB': {
+                title: 'My docs', searchPh: 'Search...',
+                tabAll: 'All', tabTutos: 'Tutorials', tabOperations: 'Operations', tabRH: 'HR', tabSecurite: 'Safety', tabMarketing: 'Marketing',
+                statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'This week',
+                empty: 'No documents found'
+            },
+            'es': {
+                title: 'Mis docs', searchPh: 'Buscar...',
+                tabAll: 'Todos', tabTutos: 'Tutoriales', tabOperations: 'Operaciones', tabRH: 'RR. HH.', tabSecurite: 'Seguridad', tabMarketing: 'Marketing',
+                statVideos: 'Vídeos', statDocs: 'Docs', statUpdates: 'Actual.', updatesValue: 'Esta semana',
+                empty: 'No se encontraron documentos'
+            },
+            'de': {
+                title: 'Meine Docs', searchPh: 'Suchen...',
+                tabAll: 'Alle', tabTutos: 'Tutorials', tabOperations: 'Betrieb', tabRH: 'HR', tabSecurite: 'Sicherheit', tabMarketing: 'Marketing',
+                statVideos: 'Videos', statDocs: 'Docs', statUpdates: 'Updates', updatesValue: 'Diese Woche',
+                empty: 'Keine Dokumente gefunden'
+            },
+            'ja': {
+                title: 'マイドキュメント', searchPh: '検索...',
+                tabAll: 'すべて', tabTutos: 'チュートリアル', tabOperations: 'オペレーション', tabRH: '人事', tabSecurite: '安全', tabMarketing: 'マーケティング',
+                statVideos: '動画', statDocs: '資料', statUpdates: '更新', updatesValue: '今週',
+                empty: 'ドキュメントが見つかりません'
+            }
+        };
+        function pickLang() {
+            const q = new URLSearchParams(location.search).get('lang');
+            const raw = (q || document.documentElement.lang || navigator.language || 'fr');
+            if (T[raw]) return raw;
+            const base = raw.toLowerCase().split('-')[0];
+            if (base === 'en') return /gb|uk/i.test(raw) ? 'en-GB' : 'en-US';
+            return T[base] ? base : 'fr';
+        }
+        const LANG = pickLang();
+        const t = T[LANG] || T['fr'];
+        document.documentElement.lang = LANG;
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.dataset.i18n; if (t[k] !== undefined) el.textContent = t[k];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const k = el.dataset.i18nPh; if (t[k] !== undefined) el.placeholder = t[k];
+            });
+        }
+
+        /* ---------- date helpers (runtime-anchored, never hardcoded) ---------- */
+        const now = new Date();
+        const daysAgo = n => { const d = new Date(now); d.setDate(d.getDate() - n); return d; };
+        const fmtDate = d => new Intl.DateTimeFormat(LANG, { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+
+        /* ---------- mock data (titles/authors are real doc names, not translated) ---------- */
+        const CATS = ['tutos', 'operations', 'rh', 'securite', 'marketing'];
+        const catLabelKey = { tutos: 'tabTutos', operations: 'tabOperations', rh: 'tabRH', securite: 'tabSecurite', marketing: 'tabMarketing' };
+
+        const docs = [
+            { type: 'doc',   category: 'rh',         daysAgo: 3,  author: 'Direction RH',
+              title: "Guide de l'équipier 2026", desc: 'Toutes les informations RH : congés, rémunération, avantages' },
+            { type: 'doc',   category: 'operations', daysAgo: 1,  author: 'Direction Opérations',
+              title: 'Standards de qualité 2026', desc: 'Guide complet des standards de qualité et procédures opérationnelles' },
+            { type: 'video', category: 'securite',   daysAgo: 5,  author: 'Sécurité Alimentaire', duration: '18:45',
+              title: 'Procédures de sécurité alimentaire', desc: 'Formation obligatoire sur les normes HACCP et la sécurité en cuisine' },
+            { type: 'video', category: 'tutos',      daysAgo: 2,  author: 'Équipe Formation',     duration: '06:30',
+              title: 'Préparation du Whopper', desc: 'Tutoriel pas à pas pour assembler un Whopper aux standards de la marque' },
+            { type: 'doc',   category: 'securite',   daysAgo: 9,  author: 'Direction Sécurité',
+              title: 'Manuel HACCP 2026', desc: 'Plan de maîtrise sanitaire et points de contrôle critiques en restaurant' },
+            { type: 'video', category: 'operations', daysAgo: 6,  author: 'Direction Opérations', duration: '09:15',
+              title: 'Nettoyage et fermeture', desc: 'Checklist vidéo des procédures de nettoyage et de fermeture du restaurant' },
+            { type: 'doc',   category: 'marketing',  daysAgo: 12, author: 'Service Marketing',
+              title: 'Charte de marque 2026', desc: 'Logos, couleurs et règles d’usage de la marque pour les supports en restaurant' }
+        ];
+
+        /* ---------- state ---------- */
+        const state = { category: 'tous', type: null, weekOnly: false, query: '' };
+
+        /* ---------- render ---------- */
+        function renderTabs() {
+            const tabs = document.getElementById('tabs');
+            const all = [{ key: 'tous', label: t.tabAll }].concat(
+                CATS.map(c => ({ key: c, label: t[catLabelKey[c]] }))
+            );
+            tabs.innerHTML = all.map(x =>
+                `<button class="cw-tab${state.category === x.key ? ' active' : ''}" data-cat="${x.key}">${x.label}</button>`
+            ).join('');
+            tabs.querySelectorAll('.cw-tab').forEach(b => b.addEventListener('click', () => {
+                state.category = b.dataset.cat; renderTabs(); renderList();
+            }));
+        }
+
+        function renderStats() {
+            document.getElementById('count-videos').textContent = docs.filter(d => d.type === 'video').length;
+            document.getElementById('count-docs').textContent = docs.filter(d => d.type === 'doc').length;
+            document.querySelectorAll('.stat-card[data-type]').forEach(c => {
+                c.classList.toggle('active', state.type === c.dataset.type);
+            });
+            document.querySelector('.stat-card[data-week]').classList.toggle('active', state.weekOnly);
+        }
+
+        const docIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>';
+        const playIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        const clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+
+        function renderList() {
+            const q = state.query.trim().toLowerCase();
+            const items = docs.filter(d =>
+                (state.category === 'tous' || d.category === state.category) &&
+                (!state.type || d.type === state.type) &&
+                (!state.weekOnly || d.daysAgo <= 7) &&
+                (!q || (d.title + ' ' + d.desc + ' ' + d.author).toLowerCase().includes(q))
+            );
+            const list = document.getElementById('list');
+            if (!items.length) { list.innerHTML = `<div class="empty">${t.empty}</div>`; return; }
+            list.innerHTML = items.map(d => {
+                const thumb = d.type === 'video'
+                    ? `<div class="doc-thumb video"><div class="play-btn">${playIcon}</div><span class="duration">${clockIcon}${d.duration}</span></div>`
+                    : `<div class="doc-thumb">${docIcon}</div>`;
+                return `<div class="doc-card">
+                    ${thumb}
+                    <div class="doc-body">
+                        <span class="doc-badge badge-${d.category}">${t[catLabelKey[d.category]]}</span>
+                        <div class="doc-title">${d.title}</div>
+                        <div class="doc-desc">${d.desc}</div>
+                        <div class="doc-meta">
+                            <span class="doc-author">${d.author}</span>
+                            <span class="doc-date">${fmtDate(daysAgo(d.daysAgo))}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function init() {
+            applyTranslations();
+            renderTabs();
+            renderStats();
+            renderList();
+
+            document.getElementById('search').addEventListener('input', e => {
+                state.query = e.target.value; renderList();
+            });
+            document.querySelectorAll('.stat-card[data-type]').forEach(c => c.addEventListener('click', () => {
+                state.type = state.type === c.dataset.type ? null : c.dataset.type;
+                renderStats(); renderList();
+            }));
+            document.querySelector('.stat-card[data-week]').addEventListener('click', () => {
+                state.weekOnly = !state.weekOnly; renderStats(); renderList();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
+
+</body>
+</html>
