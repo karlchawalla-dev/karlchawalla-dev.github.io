@@ -161,7 +161,41 @@
         .doc-thumb svg { width: 38px; height: 38px; }
         .doc-thumb.video {
             background: linear-gradient(135deg,#3a3a3a,#6e6557);
+            background-size: cover;
+            background-position: center;
         }
+        .doc-card.clickable { cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; }
+        .doc-card.clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.14); }
+        .doc-card.clickable:active { transform: scale(0.99); }
+
+        /* Viewer modal */
+        .cw-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.82);
+            display: none; align-items: center; justify-content: center;
+            padding: 1rem; z-index: 1000;
+        }
+        .cw-modal.open { display: flex; }
+        .cw-modal-box {
+            background: #fff; border-radius: 16px;
+            width: 100%; max-width: 720px;
+            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .cw-modal-head {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 0.5rem; padding: 0.75rem 0.5rem 0.75rem 1rem;
+            background: var(--bk-red); color: #fff;
+        }
+        .cw-modal-title { font-weight: 800; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cw-modal-close {
+            border: none; background: transparent; color: #fff;
+            font-size: 1.8rem; line-height: 1; cursor: pointer;
+            width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
+        }
+        .cw-modal-close:hover { background: rgba(255,255,255,0.2); }
+        .cw-video-frame { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
+        .cw-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .cw-doc-frame iframe { width: 100%; height: 75vh; border: 0; background: #fff; display: block; }
         .play-btn {
             width: 40px; height: 40px;
             border-radius: 50%;
@@ -258,6 +292,16 @@
 
     <div class="doc-list" id="list"></div>
 
+    <div class="cw-modal" id="viewer">
+        <div class="cw-modal-box">
+            <div class="cw-modal-head">
+                <span class="cw-modal-title" id="viewer-title"></span>
+                <button class="cw-modal-close" id="viewer-close" aria-label="Fermer">&times;</button>
+            </div>
+            <div id="viewer-body"></div>
+        </div>
+    </div>
+
     <script>
     (function () {
         /* ---------- i18n ---------- */
@@ -341,10 +385,15 @@
             { type: 'doc',   category: 'securite',   daysAgo: 9,  author: 'Direction Sécurité',
               title: 'Manuel HACCP 2026', desc: 'Plan de maîtrise sanitaire et points de contrôle critiques en restaurant' },
             { type: 'video', category: 'operations', daysAgo: 6,  author: 'Direction Opérations', duration: '09:15',
-              title: 'Nettoyage et fermeture', desc: 'Checklist vidéo des procédures de nettoyage et de fermeture du restaurant' },
+              title: 'Nettoyage et fermeture', desc: 'Checklist vidéo des procédures de nettoyage et de fermeture du restaurant',
+              youtube: 'PuXKXFLJhxE' },
             { type: 'doc',   category: 'marketing',  daysAgo: 12, author: 'Service Marketing',
               title: 'Charte de marque 2026', desc: 'Logos, couleurs et règles d’usage de la marque pour les supports en restaurant' }
         ];
+        docs.forEach((d, i) => { d.id = i; });
+
+        /* normalize: lowercase + strip accents, so "nettoyage" matches "Nettoyage", "securite" matches "Sécurité" */
+        const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
         /* ---------- state ---------- */
         const state = { category: 'tous', type: null, weekOnly: false, query: '' };
@@ -377,20 +426,22 @@
         const clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 
         function renderList() {
-            const q = state.query.trim().toLowerCase();
+            const q = norm(state.query.trim());
             const items = docs.filter(d =>
                 (state.category === 'tous' || d.category === state.category) &&
                 (!state.type || d.type === state.type) &&
                 (!state.weekOnly || d.daysAgo <= 7) &&
-                (!q || (d.title + ' ' + d.desc + ' ' + d.author).toLowerCase().includes(q))
+                (!q || norm(d.title + ' ' + d.desc + ' ' + d.author + ' ' + t[catLabelKey[d.category]]).includes(q))
             );
             const list = document.getElementById('list');
             if (!items.length) { list.innerHTML = `<div class="empty">${t.empty}</div>`; return; }
             list.innerHTML = items.map(d => {
+                const hasContent = !!(d.youtube || d.url);
+                const bg = d.youtube ? ` style="background-image:url('https://i.ytimg.com/vi/${d.youtube}/hqdefault.jpg')"` : '';
                 const thumb = d.type === 'video'
-                    ? `<div class="doc-thumb video"><div class="play-btn">${playIcon}</div><span class="duration">${clockIcon}${d.duration}</span></div>`
+                    ? `<div class="doc-thumb video"${bg}><div class="play-btn">${playIcon}</div><span class="duration">${clockIcon}${d.duration}</span></div>`
                     : `<div class="doc-thumb">${docIcon}</div>`;
-                return `<div class="doc-card">
+                return `<div class="doc-card${hasContent ? ' clickable' : ''}" data-id="${d.id}">
                     ${thumb}
                     <div class="doc-body">
                         <span class="doc-badge badge-${d.category}">${t[catLabelKey[d.category]]}</span>
@@ -403,6 +454,33 @@
                     </div>
                 </div>`;
             }).join('');
+
+            list.querySelectorAll('.doc-card.clickable').forEach(card => {
+                card.addEventListener('click', () => {
+                    const d = docs.find(x => x.id == card.dataset.id);
+                    if (d) openViewer(d);
+                });
+            });
+        }
+
+        /* ---------- viewer (modal) ---------- */
+        function openViewer(d) {
+            const modal = document.getElementById('viewer');
+            const body = document.getElementById('viewer-body');
+            document.getElementById('viewer-title').textContent = d.title;
+            if (d.youtube) {
+                body.innerHTML = `<div class="cw-video-frame"><iframe src="https://www.youtube.com/embed/${d.youtube}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
+            } else if (d.url) {
+                body.innerHTML = `<div class="cw-doc-frame"><iframe src="${d.url}"></iframe></div>`;
+            }
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeViewer() {
+            const modal = document.getElementById('viewer');
+            modal.classList.remove('open');
+            document.getElementById('viewer-body').innerHTML = ''; // stops the video / frees the iframe
+            document.body.style.overflow = '';
         }
 
         function init() {
@@ -421,6 +499,11 @@
             document.querySelector('.stat-card[data-week]').addEventListener('click', () => {
                 state.weekOnly = !state.weekOnly; renderStats(); renderList();
             });
+
+            const modal = document.getElementById('viewer');
+            document.getElementById('viewer-close').addEventListener('click', closeViewer);
+            modal.addEventListener('click', e => { if (e.target === modal) closeViewer(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) closeViewer(); });
         }
 
         document.addEventListener('DOMContentLoaded', init);
