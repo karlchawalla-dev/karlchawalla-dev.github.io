@@ -513,8 +513,11 @@
             renderPdf(d.url);
         }
 
-        /* Render a PDF to canvases with PDF.js — works inside iOS webviews where <iframe src=pdf> shows blank. */
-        const PDFJS_VER = '3.11.174';
+        /* Render a PDF to canvases with PDF.js — works inside iOS webviews where <iframe src=pdf> shows blank.
+           PDF.js is self-hosted (same-origin) so it loads even when the Staffbase embed sandbox/CSP blocks
+           external CDN scripts, popups, downloads and top-navigation. Everything stays inside the iframe. */
+        const PDFJS_LIB = 'vendor/pdfjs/pdf.min.js';
+        const PDFJS_WORKER = 'vendor/pdfjs/pdf.worker.min.js';
         function renderPdf(url) {
             const container = document.getElementById('pdf-pages');
             let done = false;
@@ -530,7 +533,7 @@
             const draw = () => {
                 if (done) return;
                 if (!window.pdfjsLib) { clearTimeout(timer); fallback(); return; }
-                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VER}/pdf.worker.min.js`;
+                pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
                 pdfjsLib.getDocument(url).promise.then(async pdf => {
                     if (done) return; done = true; clearTimeout(timer);
                     container.innerHTML = '';
@@ -550,7 +553,7 @@
             };
             if (window.pdfjsLib) { draw(); return; }
             const s = document.createElement('script');
-            s.src = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VER}/pdf.min.js`;
+            s.src = PDFJS_LIB;
             s.onload = draw;
             s.onerror = () => { clearTimeout(timer); fallback(); };
             document.head.appendChild(s);
