@@ -466,23 +466,25 @@
             list.querySelectorAll('.doc-card.clickable').forEach(card => {
                 card.addEventListener('click', () => {
                     const d = docs.find(x => x.id == card.dataset.id);
-                    if (d) openViewer(d);
+                    if (!d) return;
+                    if (d.youtube) {
+                        // Many YouTube videos disable embedding (error 150/153) — open directly in the YouTube app / browser.
+                        window.open('https://www.youtube.com/watch?v=' + d.youtube, '_blank', 'noopener');
+                    } else if (d.url) {
+                        openViewer(d);
+                    }
                 });
             });
         }
 
-        /* ---------- viewer (modal) ---------- */
+        /* ---------- viewer (modal) — documents only; videos open directly on YouTube ---------- */
         function openViewer(d) {
             const modal = document.getElementById('viewer');
             const body = document.getElementById('viewer-body');
             document.getElementById('viewer-title').textContent = d.title;
-            if (d.youtube) {
-                body.innerHTML = `<div class="cw-video-frame"><iframe src="https://www.youtube.com/embed/${d.youtube}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
-            } else if (d.url) {
-                body.innerHTML =
-                    `<div class="cw-doc-frame"><iframe src="${d.url}#view=FitH" title="${d.title}"></iframe></div>` +
-                    `<div class="cw-doc-actions"><a href="${d.url}" target="_blank" rel="noopener">${t.openDoc}</a></div>`;
-            }
+            body.innerHTML =
+                `<div class="cw-doc-frame"><iframe src="${d.url}#view=FitH" title="${d.title}"></iframe></div>` +
+                `<div class="cw-doc-actions"><a href="${d.url}" target="_blank" rel="noopener">${t.openDoc}</a></div>`;
             modal.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
