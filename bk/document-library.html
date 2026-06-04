@@ -490,7 +490,7 @@
                         const isAbsolute = /^https?:\/\//i.test(d.url);
                         const sameOrigin = !isAbsolute || d.url.indexOf(location.origin + '/') === 0;
                         if (sameOrigin) openViewer(d);
-                        else openExternal(d.url);
+                        else openInApp(d.url);
                     }
                 });
             });
@@ -499,6 +499,21 @@
         /* Open an external URL reliably across browsers and mobile webviews (iOS Staffbase app, etc.).
            A synthesized <a target="_blank"> click is honored in more sandboxed contexts than window.open();
            falls back to top-frame navigation if popups are blocked. */
+        /* Open a URL that belongs to the Staffbase app itself (same domain as the host app, so already
+           authenticated). Navigate the TOP app frame (target=_top) rather than spawning a new browser
+           tab — a new tab has no session cookies and a "secure" media URL would 307 to the login page. */
+        function openInApp(url) {
+            try {
+                const a = document.createElement('a');
+                a.href = url; a.target = '_top'; a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e) {
+                try { window.top.location.href = url; } catch (_) { window.location.href = url; }
+            }
+        }
+
         function openExternal(url) {
             try {
                 const a = document.createElement('a');
