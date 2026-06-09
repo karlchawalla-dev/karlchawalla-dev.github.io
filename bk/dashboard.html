@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Dashboard">
+    <meta name="widget-description" content="Restaurant daily KPI dashboard — revenue, service time, Google rating and compliance score with national targets">
+    <meta name="widget-tags" content="Reports & Dashboards, Operations">
+    <title>Dashboard</title>
+    <style>
+        :root {
+            --bk-red: #D62300;
+            --bk-gold: #F5BD1F;
+            --bk-gold-deep: #E0A500;
+            --bk-orange: #FF8732;
+            --bk-brown: #6E6557;
+            --cream: #FCF6E0;
+            --text: #1a1a1a;
+            --text-light: #6b7280;
+            --card: #ffffff;
+            --shadow: 0 1px 4px rgba(0,0,0,0.08);
+
+            --green: #2FA84F;
+            --green-deep: #178A3D;
+            --green-border: #BFE6CD;
+            --green-bg: #EAF8EF;
+
+            --navy: #1E3A8A;
+            --indigo: #3730A3;
+            --blue-border: #C7D2FE;
+            --blue-bg: #EEF2FF;
+
+            --gold-bg: #FDF8E3;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            padding: 1rem;
+            max-width: 480px;
+            margin: 0 auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header banner */
+        .cw-header {
+            background: var(--bk-red);
+            color: #fff;
+            padding: 1.4rem 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1.25rem;
+        }
+        .cw-header h1 { font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
+        .cw-header p { font-size: 1rem; font-weight: 500; margin-top: 0.2rem; opacity: 0.95; }
+
+        /* Section heading */
+        .section-head {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin: 1.5rem 0 0.7rem;
+            font-weight: 800; font-size: 1.15rem;
+        }
+        .section-head:first-of-type { margin-top: 0.5rem; }
+        .section-head svg { width: 22px; height: 22px; flex-shrink: 0; }
+        .ic-green { color: var(--green); }
+        .ic-red   { color: var(--bk-red); }
+        .ic-gold  { color: var(--bk-gold-deep); }
+        .ic-indigo{ color: var(--indigo); }
+
+        /* Generic KPI card */
+        .kpi {
+            border: 2px solid;
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+            background: var(--card);
+        }
+
+        /* CA card */
+        .card-ca {
+            border-color: var(--green-border);
+            background: linear-gradient(160deg, #fff, var(--green-bg));
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .sq-icon {
+            width: 58px; height: 58px; min-width: 58px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+        }
+        .sq-icon svg { width: 28px; height: 28px; }
+        .sq-green { background: var(--green); }
+        .sq-red   { background: var(--bk-red); }
+        .sq-gold  { background: var(--bk-gold); }
+        .sq-indigo{ background: var(--indigo); }
+        .ca-text { flex: 1; min-width: 0; }
+        .ca-label { font-weight: 700; font-size: 0.95rem; color: var(--text); line-height: 1.25; }
+        .ca-value { font-weight: 800; font-size: 1.9rem; color: var(--green-deep); margin-top: 0.15rem; }
+
+        /* Split card (two columns w/ divider) */
+        .card-split {
+            border-color: var(--bk-red);
+            display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center;
+            text-align: center; gap: 0.5rem;
+        }
+        .split-div { background: #e5e7eb; width: 1px; height: 70%; align-self: center; }
+        .split-col { padding: 0.2rem 0.4rem; }
+        .split-label { font-weight: 700; font-size: 0.92rem; color: var(--text-light); }
+        .split-value { font-weight: 800; font-size: 2rem; margin-top: 0.1rem; line-height: 1; }
+        .val-red  { color: var(--bk-red); }
+        .val-navy { color: var(--navy); }
+        .val-dark { color: #1e293b; }
+
+        /* Metric row (Kiosque / Drive) */
+        .card-metric {
+            margin-top: 0.8rem;
+            display: flex; align-items: center; gap: 0.9rem;
+        }
+        .card-metric.ok   { border-color: var(--green-border); background: linear-gradient(160deg,#fff,var(--green-bg)); }
+        .card-metric.warn { border-color: var(--bk-gold); background: linear-gradient(160deg,#fff,var(--gold-bg)); }
+        .card-metric .sq-icon { width: 50px; height: 50px; min-width: 50px; }
+        .card-metric .sq-icon svg { width: 24px; height: 24px; }
+        .m-label { flex: 1; font-weight: 800; font-size: 1.15rem; }
+        .m-value { font-weight: 800; font-size: 1.6rem; color: var(--val-dark, #1e293b); }
+
+        /* Google card */
+        .card-google {
+            border-color: var(--bk-gold);
+            background: linear-gradient(160deg, #fff, var(--gold-bg));
+        }
+        .card-merieux {
+            border-color: var(--blue-border);
+            background: linear-gradient(160deg, #fff, var(--blue-bg));
+        }
+        .g-top { display: flex; align-items: center; gap: 1rem; }
+        .g-info { flex: 1; min-width: 0; }
+        .stars { display: flex; gap: 2px; margin-bottom: 0.25rem; }
+        .stars svg { width: 20px; height: 20px; color: var(--bk-gold); }
+        .g-reviews { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+        .m-title { flex: 1; font-weight: 700; font-size: 1.02rem; }
+        .divider { height: 1px; background: #e5e7eb; margin: 0.95rem 0; }
+        .split-bottom { display: grid; grid-template-columns: 1fr 1px 1fr; text-align: center; align-items: center; }
+        .split-bottom .split-value { font-size: 1.8rem; }
+        .unit { font-size: 0.95rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="cw-header">
+        <h1 data-i18n="dashTitle">Dashboard</h1>
+        <p data-i18n="dashSub">Indicateurs de la veille</p>
+    </div>
+
+    <!-- CA -->
+    <div class="section-head">
+        <svg class="ic-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.8-2.5 2s1.1 1.8 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2a2.5 2.5 0 0 1-2.5-1.5"/><path d="M12 6.5v11"/></svg>
+        <span data-i18n="secCA">CA</span>
+    </div>
+    <div class="kpi card-ca">
+        <div class="sq-icon sq-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="ca-text">
+            <div class="ca-label"><span data-i18n="caTotal">Total de la journée</span> &middot; 387 <span data-i18n="caTx">transactions</span></div>
+            <div class="ca-value">6 842&euro;</div>
+        </div>
+    </div>
+
+    <!-- Temps de Service -->
+    <div class="section-head">
+        <svg class="ic-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span data-i18n="secTime">Temps de Service</span>
+    </div>
+    <div class="kpi card-split">
+        <div class="split-col">
+            <div class="split-label" data-i18n="timeGlobal">Temps moyen global</div>
+            <div class="split-value val-red">5:04</div>
+        </div>
+        <div class="split-div"></div>
+        <div class="split-col">
+            <div class="split-label" data-i18n="objNational">Objectif national</div>
+            <div class="split-value val-navy">5:30</div>
+        </div>
+    </div>
+    <div class="kpi card-metric ok">
+        <div class="sq-icon sq-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2.5"/><path d="M12 18h.01"/></svg>
+        </div>
+        <div class="m-label" data-i18n="kiosque">Kiosque</div>
+        <div class="m-value">4:20</div>
+    </div>
+    <div class="kpi card-metric warn">
+        <div class="sq-icon sq-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2v-3.3a1 1 0 0 0-.2-.6l-2.1-2.8a1 1 0 0 0-.8-.4H6.3a1 1 0 0 0-.9.5L3.6 13.3a1 1 0 0 0-.1.5V17h2"/><path d="M5 17h14"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg>
+        </div>
+        <div class="m-label" data-i18n="drive">Drive</div>
+        <div class="m-value">5:48</div>
+    </div>
+
+    <!-- Note Google -->
+    <div class="section-head">
+        <svg class="ic-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+        <span data-i18n="secGoogle">Note Google</span>
+    </div>
+    <div class="kpi card-google">
+        <div class="g-top">
+            <div class="sq-icon sq-gold">
+                <svg viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+            </div>
+            <div class="g-info">
+                <div class="stars">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 6.91-1.01L12 2z"/></svg>
+                </div>
+                <div class="g-reviews">24 <span data-i18n="newReviews">nouveaux avis</span></div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="split-bottom">
+            <div class="split-col">
+                <div class="split-label" data-i18n="noteActuelle">Note actuelle</div>
+                <div class="split-value val-dark">4.3<span class="unit">/5</span></div>
+            </div>
+            <div class="split-div"></div>
+            <div class="split-col">
+                <div class="split-label" data-i18n="objNational">Objectif national</div>
+                <div class="split-value val-navy">4.4<span class="unit">/5</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merieux -->
+    <div class="section-head">
+        <svg class="ic-indigo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 13.5l2 2 4-4"/></svg>
+        <span data-i18n="secMerieux">Merieux</span>
+    </div>
+    <div class="kpi card-merieux">
+        <div class="g-top">
+            <div class="sq-icon sq-indigo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 13.5l2 2 4-4"/></svg>
+            </div>
+            <div class="m-title" data-i18n="conformity">Score de conformité</div>
+        </div>
+        <div class="divider"></div>
+        <div class="split-bottom">
+            <div class="split-col">
+                <div class="split-label" data-i18n="scoreActuel">Score actuel</div>
+                <div class="split-value val-navy">92<span class="unit">%</span></div>
+            </div>
+            <div class="split-div"></div>
+            <div class="split-col">
+                <div class="split-label" data-i18n="objNational">Objectif national</div>
+                <div class="split-value val-navy">97<span class="unit">%</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        /* ---------- i18n (same pattern as document-library.html) ---------- */
+        const T = {
+            'fr': {
+                dashTitle: 'Dashboard', dashSub: 'Indicateurs de la veille',
+                secCA: 'CA', caTotal: 'Total de la journée', caTx: 'transactions',
+                secTime: 'Temps de Service', timeGlobal: 'Temps moyen global', objNational: 'Objectif national',
+                kiosque: 'Kiosque', drive: 'Drive',
+                secGoogle: 'Note Google', newReviews: 'nouveaux avis', noteActuelle: 'Note actuelle',
+                secMerieux: 'Merieux', conformity: 'Score de conformité', scoreActuel: 'Score actuel'
+            },
+            'en-US': {
+                dashTitle: 'Dashboard', dashSub: "Yesterday's indicators",
+                secCA: 'Revenue', caTotal: 'Daily total', caTx: 'transactions',
+                secTime: 'Service Time', timeGlobal: 'Average overall time', objNational: 'National target',
+                kiosque: 'Kiosk', drive: 'Drive',
+                secGoogle: 'Google Rating', newReviews: 'new reviews', noteActuelle: 'Current rating',
+                secMerieux: 'Merieux', conformity: 'Compliance score', scoreActuel: 'Current score'
+            },
+            'en-GB': {
+                dashTitle: 'Dashboard', dashSub: "Yesterday's indicators",
+                secCA: 'Revenue', caTotal: 'Daily total', caTx: 'transactions',
+                secTime: 'Service Time', timeGlobal: 'Average overall time', objNational: 'National target',
+                kiosque: 'Kiosk', drive: 'Drive',
+                secGoogle: 'Google Rating', newReviews: 'new reviews', noteActuelle: 'Current rating',
+                secMerieux: 'Merieux', conformity: 'Compliance score', scoreActuel: 'Current score'
+            },
+            'es': {
+                dashTitle: 'Panel', dashSub: 'Indicadores de ayer',
+                secCA: 'Ventas', caTotal: 'Total del día', caTx: 'transacciones',
+                secTime: 'Tiempo de servicio', timeGlobal: 'Tiempo medio global', objNational: 'Objetivo nacional',
+                kiosque: 'Quiosco', drive: 'Drive',
+                secGoogle: 'Reseña de Google', newReviews: 'nuevas reseñas', noteActuelle: 'Nota actual',
+                secMerieux: 'Merieux', conformity: 'Puntuación de conformidad', scoreActuel: 'Puntuación actual'
+            },
+            'de': {
+                dashTitle: 'Dashboard', dashSub: 'Kennzahlen von gestern',
+                secCA: 'Umsatz', caTotal: 'Tagesumsatz', caTx: 'Transaktionen',
+                secTime: 'Servicezeit', timeGlobal: 'Durchschnittliche Gesamtzeit', objNational: 'Nationales Ziel',
+                kiosque: 'Kiosk', drive: 'Drive',
+                secGoogle: 'Google-Bewertung', newReviews: 'neue Bewertungen', noteActuelle: 'Aktuelle Bewertung',
+                secMerieux: 'Merieux', conformity: 'Compliance-Score', scoreActuel: 'Aktueller Score'
+            },
+            'ja': {
+                dashTitle: 'ダッシュボード', dashSub: '前日の指標',
+                secCA: '売上', caTotal: '一日の合計', caTx: '件の取引',
+                secTime: 'サービスタイム', timeGlobal: '平均サービス時間', objNational: '全国目標',
+                kiosque: 'キオスク', drive: 'ドライブ',
+                secGoogle: 'Googleレビュー', newReviews: '件の新着レビュー', noteActuelle: '現在の評価',
+                secMerieux: 'Merieux', conformity: 'コンプライアンススコア', scoreActuel: '現在のスコア'
+            }
+        };
+        function pickLang() {
+            const q = new URLSearchParams(location.search).get('lang');
+            const raw = (q || document.documentElement.lang || navigator.language || 'fr');
+            if (T[raw]) return raw;
+            const base = raw.toLowerCase().split('-')[0];
+            if (base === 'en') return /gb|uk/i.test(raw) ? 'en-GB' : 'en-US';
+            return T[base] ? base : 'fr';
+        }
+        const LANG = pickLang();
+        const t = T[LANG] || T['fr'];
+        document.documentElement.lang = LANG;
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const k = el.dataset.i18n; if (t[k] !== undefined) el.textContent = t[k];
+        });
+    })();
+    </script>
+</body>
+</html>
