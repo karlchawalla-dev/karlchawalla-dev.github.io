@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Boîte à Idées">
+    <meta name="widget-description" content="Idea box — submit ideas via a form, browse by status, like and comment">
+    <meta name="widget-tags" content="Communications, Recognition, Operations">
+    <title>Boîte à Idées</title>
+    <style>
+        :root {
+            --bk-red: #D62300;
+            --bk-gold: #F5BD1F;
+            --bk-gold-deep: #E0A500;
+            --bk-orange: #FF8732;
+            --bk-brown: #6E6557;
+            --cream: #FCF6E0;
+            --text: #1a1a1a;
+            --text-light: #6b7280;
+            --card: #ffffff;
+            --shadow: 0 1px 4px rgba(0,0,0,0.08);
+            --green: #2FA84F;
+            --green-deep: #178A3D;
+            --navy: #1E3A8A;
+            --indigo: #3730A3;
+            --pink: #EC4899;
+            --teal: #0EA5A4;
+            --border: #e5e7eb;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            padding: 1rem;
+            max-width: 480px;
+            margin: 0 auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header (orange→gold gradient) */
+        .cw-header {
+            background: linear-gradient(120deg, var(--bk-orange), var(--bk-gold));
+            color: #fff;
+            padding: 1.4rem 1.5rem;
+            border-radius: 18px;
+            margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 0.9rem;
+        }
+        .cw-header .h-ic { width: 34px; height: 34px; flex-shrink: 0; }
+        .cw-header h1 { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+        .cw-header p { font-size: 0.95rem; font-weight: 500; margin-top: 0.2rem; opacity: 0.97; }
+
+        /* Intro card */
+        .intro {
+            border: 2px solid var(--bk-gold);
+            background: linear-gradient(160deg, #fff, #fdf8e3);
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+            display: flex; gap: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .sq-icon {
+            width: 46px; height: 46px; min-width: 46px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+        }
+        .sq-icon svg { width: 24px; height: 24px; }
+        .sq-gold { background: var(--bk-gold); }
+        .intro-text h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.2rem; }
+        .intro-text p { font-size: 0.92rem; color: var(--text-light); line-height: 1.35; }
+
+        /* Propose button */
+        .btn-propose {
+            width: 100%;
+            border: none;
+            background: var(--bk-gold);
+            color: var(--text);
+            font-weight: 800; font-size: 1.05rem;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            margin-bottom: 1rem;
+            transition: filter 0.12s, transform 0.12s;
+        }
+        .btn-propose svg { width: 22px; height: 22px; }
+        .btn-propose:hover { filter: brightness(0.96); }
+        .btn-propose:active { transform: scale(0.99); }
+
+        /* Tabs */
+        .cw-tabs {
+            display: flex; gap: 0.3rem;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0.3rem;
+            margin-bottom: 1.1rem;
+        }
+        .cw-tab {
+            flex: 1;
+            border: none; background: transparent;
+            color: var(--text-light); font-weight: 700; font-size: 0.88rem;
+            padding: 0.5rem 0.4rem;
+            border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+            white-space: nowrap;
+        }
+        .cw-tab.active { background: var(--bk-red); color: #fff; }
+        .cw-tab .cnt {
+            background: rgba(0,0,0,0.08); color: inherit;
+            font-size: 0.75rem; font-weight: 800;
+            padding: 0.05rem 0.4rem; border-radius: 999px; min-width: 20px;
+        }
+        .cw-tab.active .cnt { background: rgba(255,255,255,0.28); }
+
+        /* Idea list */
+        .idea-list { display: flex; flex-direction: column; gap: 0.85rem; }
+        .idea {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-left-width: 5px;
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+        }
+        .idea-top { display: flex; gap: 0.8rem; align-items: flex-start; }
+        .idea-top .sq-icon { width: 42px; height: 42px; min-width: 42px; border-radius: 11px; }
+        .idea-title { font-weight: 800; font-size: 1.1rem; line-height: 1.2; }
+        .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.55rem 0 0.5rem; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            font-size: 0.75rem; font-weight: 700;
+            padding: 0.22rem 0.6rem; border-radius: 999px;
+        }
+        .badge svg { width: 13px; height: 13px; }
+        .badge-cat { background: #fff; border: 1.5px solid var(--border); color: var(--text); }
+        .st-new      { background: var(--navy); color: #fff; }
+        .st-review   { background: var(--bk-orange); color: #fff; }
+        .st-approved { background: var(--green); color: #fff; }
+        .idea-desc { font-size: 0.92rem; color: #374151; line-height: 1.4; }
+
+        /* Footer actions */
+        .idea-foot {
+            display: flex; align-items: center; gap: 1rem;
+            margin-top: 0.85rem; padding-top: 0.7rem;
+            border-top: 1px solid var(--border);
+        }
+        .act {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            border: none; background: transparent; cursor: pointer;
+            font-weight: 700; font-size: 0.88rem; color: var(--text-light);
+            padding: 0.15rem 0.1rem;
+        }
+        .act svg { width: 19px; height: 19px; }
+        .act.liked { color: var(--bk-red); }
+        .act.liked svg { fill: var(--bk-red); }
+        .idea-meta { margin-left: auto; font-size: 0.78rem; color: var(--text-light); white-space: nowrap; }
+
+        /* Comments */
+        .comments { margin-top: 0.8rem; display: none; }
+        .comments.open { display: block; }
+        .comment {
+            background: #f9fafb; border-radius: 12px;
+            padding: 0.55rem 0.7rem; margin-bottom: 0.45rem;
+        }
+        .comment .c-head { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.15rem; }
+        .comment .c-author { font-weight: 700; font-size: 0.82rem; color: var(--bk-brown); }
+        .comment .c-date { font-size: 0.75rem; color: var(--text-light); }
+        .comment .c-text { font-size: 0.88rem; color: #374151; line-height: 1.35; }
+        .c-form { display: flex; gap: 0.45rem; margin-top: 0.5rem; }
+        .c-form input {
+            flex: 1; border: 1px solid var(--border); border-radius: 10px;
+            padding: 0.55rem 0.7rem; font-size: 0.88rem; outline: none; font-family: inherit;
+        }
+        .c-form input:focus { border-color: var(--bk-gold-deep); }
+        .c-form button {
+            border: none; background: var(--bk-red); color: #fff;
+            font-weight: 700; font-size: 0.85rem; padding: 0 0.9rem;
+            border-radius: 10px; cursor: pointer;
+        }
+
+        .empty { text-align: center; color: var(--text-light); padding: 2rem 1rem; font-size: 0.95rem; }
+
+        /* Modal form */
+        .cw-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+            display: none; align-items: flex-end; justify-content: center;
+            padding: 0; z-index: 1000;
+        }
+        .cw-modal.open { display: flex; }
+        .cw-modal-box {
+            background: #fff; width: 100%; max-width: 480px;
+            border-radius: 20px 20px 0 0;
+            max-height: 92vh; overflow-y: auto;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.22s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%);} to { transform: translateY(0);} }
+        .cw-modal-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; background: #fff;
+        }
+        .cw-modal-head h3 { font-size: 1.15rem; font-weight: 800; }
+        .cw-modal-close {
+            border: none; background: #f3f4f6; color: var(--text);
+            font-size: 1.4rem; line-height: 1; cursor: pointer;
+            width: 36px; height: 36px; border-radius: 10px;
+        }
+        .form-body { padding: 1.1rem 1.25rem 1.4rem; }
+        .field { margin-bottom: 1rem; }
+        .field label { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem; }
+        .field input, .field select, .field textarea {
+            width: 100%; border: 1.5px solid var(--border); border-radius: 12px;
+            padding: 0.75rem 0.85rem; font-size: 0.95rem; font-family: inherit;
+            color: var(--text); outline: none; background: #fff;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--bk-gold-deep); }
+        .field textarea { min-height: 110px; resize: vertical; }
+        .form-actions { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
+        .form-actions button { flex: 1; border: none; border-radius: 12px; padding: 0.85rem; font-weight: 800; font-size: 0.98rem; cursor: pointer; }
+        .btn-cancel { background: #f3f4f6; color: var(--text); }
+        .btn-submit { background: var(--bk-red); color: #fff; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Toast */
+        .toast {
+            position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%) translateY(2rem);
+            background: var(--green-deep); color: #fff; font-weight: 700; font-size: 0.9rem;
+            padding: 0.75rem 1.2rem; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 1100;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="cw-header">
+        <svg class="h-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
+        <div>
+            <h1 data-i18n="title">Boîte à Idées</h1>
+            <p data-i18n="subtitle">Partagez vos idées pour améliorer notre restaurant</p>
+        </div>
+    </div>
+
+    <div class="intro">
+        <div class="sq-icon sq-gold">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
+        </div>
+        <div class="intro-text">
+            <h2 data-i18n="introTitle">Votre créativité compte !</h2>
+            <p data-i18n="introBody">Toutes les idées sont étudiées par l'équipe d'encadrement. Les meilleures peuvent être mises en place dans notre restaurant !</p>
+        </div>
+    </div>
+
+    <button class="btn-propose" id="open-form">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M12 5v14"/></svg>
+        <span data-i18n="propose">Proposer une idée</span>
+    </button>
+
+    <div class="cw-tabs" id="tabs"></div>
+
+    <div class="idea-list" id="list"></div>
+
+    <!-- Form modal -->
+    <div class="cw-modal" id="modal">
+        <div class="cw-modal-box">
+            <div class="cw-modal-head">
+                <h3 data-i18n="formTitle">Proposer une idée</h3>
+                <button class="cw-modal-close" id="close-form" aria-label="Fermer">&times;</button>
+            </div>
+            <div class="form-body">
+                <div class="field">
+                    <label data-i18n="fTitle" for="f-title">Titre</label>
+                    <input type="text" id="f-title" data-i18n-ph="fTitlePh" maxlength="80">
+                </div>
+                <div class="field">
+                    <label data-i18n="fCat" for="f-cat">Catégorie</label>
+                    <select id="f-cat"></select>
+                </div>
+                <div class="field">
+                    <label data-i18n="fDesc" for="f-desc">Description</label>
+                    <textarea id="f-desc" data-i18n-ph="fDescPh" maxlength="400"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-cancel" id="cancel-form" data-i18n="cancel">Annuler</button>
+                    <button class="btn-submit" id="submit-form" data-i18n="submit">Soumettre</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function () {
+        /* ---------- i18n ---------- */
+        const T = {
+            'fr': {
+                title: 'Boîte à Idées', subtitle: 'Partagez vos idées pour améliorer notre restaurant',
+                introTitle: 'Votre créativité compte !', introBody: 'Toutes les idées sont étudiées par l\'équipe d\'encadrement. Les meilleures peuvent être mises en place dans notre restaurant !',
+                propose: 'Proposer une idée', tabAll: 'Toutes', tabReview: 'En étude', tabApproved: 'Approuvées',
+                stNew: 'Nouvelle', stReview: 'En étude', stApproved: 'Approuvée',
+                catExp: 'Expérience client', catOps: 'Opérations', catProduct: 'Produit', catRH: 'RH', catHygiene: 'Hygiène & Sécurité',
+                comments: 'Commentaires', addComment: 'Ajouter un commentaire…', publish: 'Publier',
+                formTitle: 'Proposer une idée', fTitle: 'Titre', fTitlePh: 'Titre de votre idée', fCat: 'Catégorie', fDesc: 'Description', fDescPh: 'Décrivez votre idée…',
+                cancel: 'Annuler', submit: 'Soumettre', you: 'Vous', empty: 'Aucune idée dans cette catégorie', toast: 'Votre idée a été soumise !'
+            },
+            'en-US': {
+                title: 'Idea Box', subtitle: 'Share your ideas to improve our restaurant',
+                introTitle: 'Your creativity matters!', introBody: 'Every idea is reviewed by the management team. The best ones can be rolled out in our restaurant!',
+                propose: 'Submit an idea', tabAll: 'All', tabReview: 'Under review', tabApproved: 'Approved',
+                stNew: 'New', stReview: 'Under review', stApproved: 'Approved',
+                catExp: 'Customer experience', catOps: 'Operations', catProduct: 'Product', catRH: 'HR', catHygiene: 'Health & Safety',
+                comments: 'Comments', addComment: 'Add a comment…', publish: 'Post',
+                formTitle: 'Submit an idea', fTitle: 'Title', fTitlePh: 'Title of your idea', fCat: 'Category', fDesc: 'Description', fDescPh: 'Describe your idea…',
+                cancel: 'Cancel', submit: 'Submit', you: 'You', empty: 'No ideas in this category', toast: 'Your idea has been submitted!'
+            },
+            'en-GB': {
+                title: 'Idea Box', subtitle: 'Share your ideas to improve our restaurant',
+                introTitle: 'Your creativity matters!', introBody: 'Every idea is reviewed by the management team. The best ones can be rolled out in our restaurant!',
+                propose: 'Submit an idea', tabAll: 'All', tabReview: 'Under review', tabApproved: 'Approved',
+                stNew: 'New', stReview: 'Under review', stApproved: 'Approved',
+                catExp: 'Customer experience', catOps: 'Operations', catProduct: 'Product', catRH: 'HR', catHygiene: 'Health & Safety',
+                comments: 'Comments', addComment: 'Add a comment…', publish: 'Post',
+                formTitle: 'Submit an idea', fTitle: 'Title', fTitlePh: 'Title of your idea', fCat: 'Category', fDesc: 'Description', fDescPh: 'Describe your idea…',
+                cancel: 'Cancel', submit: 'Submit', you: 'You', empty: 'No ideas in this category', toast: 'Your idea has been submitted!'
+            },
+            'es': {
+                title: 'Buzón de ideas', subtitle: 'Comparte tus ideas para mejorar nuestro restaurante',
+                introTitle: '¡Tu creatividad cuenta!', introBody: 'Todas las ideas son estudiadas por el equipo de dirección. ¡Las mejores pueden implementarse en nuestro restaurante!',
+                propose: 'Proponer una idea', tabAll: 'Todas', tabReview: 'En estudio', tabApproved: 'Aprobadas',
+                stNew: 'Nueva', stReview: 'En estudio', stApproved: 'Aprobada',
+                catExp: 'Experiencia del cliente', catOps: 'Operaciones', catProduct: 'Producto', catRH: 'RR. HH.', catHygiene: 'Higiene y seguridad',
+                comments: 'Comentarios', addComment: 'Añadir un comentario…', publish: 'Publicar',
+                formTitle: 'Proponer una idea', fTitle: 'Título', fTitlePh: 'Título de tu idea', fCat: 'Categoría', fDesc: 'Descripción', fDescPh: 'Describe tu idea…',
+                cancel: 'Cancelar', submit: 'Enviar', you: 'Tú', empty: 'No hay ideas en esta categoría', toast: '¡Tu idea ha sido enviada!'
+            },
+            'de': {
+                title: 'Ideenbox', subtitle: 'Teile deine Ideen, um unser Restaurant zu verbessern',
+                introTitle: 'Deine Kreativität zählt!', introBody: 'Alle Ideen werden vom Führungsteam geprüft. Die besten können in unserem Restaurant umgesetzt werden!',
+                propose: 'Idee einreichen', tabAll: 'Alle', tabReview: 'In Prüfung', tabApproved: 'Genehmigt',
+                stNew: 'Neu', stReview: 'In Prüfung', stApproved: 'Genehmigt',
+                catExp: 'Kundenerlebnis', catOps: 'Betrieb', catProduct: 'Produkt', catRH: 'HR', catHygiene: 'Hygiene & Sicherheit',
+                comments: 'Kommentare', addComment: 'Kommentar hinzufügen…', publish: 'Senden',
+                formTitle: 'Idee einreichen', fTitle: 'Titel', fTitlePh: 'Titel deiner Idee', fCat: 'Kategorie', fDesc: 'Beschreibung', fDescPh: 'Beschreibe deine Idee…',
+                cancel: 'Abbrechen', submit: 'Einreichen', you: 'Du', empty: 'Keine Ideen in dieser Kategorie', toast: 'Deine Idee wurde eingereicht!'
+            },
+            'ja': {
+                title: 'アイデアボックス', subtitle: 'レストランを良くするアイデアを共有しましょう',
+                introTitle: 'あなたの創造力が大切です！', introBody: 'すべてのアイデアは管理チームが検討します。優れたものは当店で実施されることがあります！',
+                propose: 'アイデアを投稿', tabAll: 'すべて', tabReview: '検討中', tabApproved: '承認済み',
+                stNew: '新規', stReview: '検討中', stApproved: '承認済み',
+                catExp: '顧客体験', catOps: 'オペレーション', catProduct: '商品', catRH: '人事', catHygiene: '衛生・安全',
+                comments: 'コメント', addComment: 'コメントを追加…', publish: '投稿',
+                formTitle: 'アイデアを投稿', fTitle: 'タイトル', fTitlePh: 'アイデアのタイトル', fCat: 'カテゴリー', fDesc: '説明', fDescPh: 'アイデアを説明してください…',
+                cancel: 'キャンセル', submit: '送信', you: 'あなた', empty: 'このカテゴリーにアイデアはありません', toast: 'アイデアを送信しました！'
+            }
+        };
+        function pickLang() {
+            const q = new URLSearchParams(location.search).get('lang');
+            const raw = (q || document.documentElement.lang || navigator.language || 'fr');
+            if (T[raw]) return raw;
+            const base = raw.toLowerCase().split('-')[0];
+            if (base === 'en') return /gb|uk/i.test(raw) ? 'en-GB' : 'en-US';
+            return T[base] ? base : 'fr';
+        }
+        const LANG = pickLang();
+        const t = T[LANG] || T['fr'];
+        document.documentElement.lang = LANG;
+
+        function applyStatic() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.dataset.i18n; if (t[k] !== undefined) el.textContent = t[k];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const k = el.dataset.i18nPh; if (t[k] !== undefined) el.placeholder = t[k];
+            });
+        }
+
+        /* ---------- date helpers (runtime-anchored) ---------- */
+        const now = new Date();
+        const daysAgo = n => { const d = new Date(now); d.setDate(d.getDate() - n); return d; };
+        const fmtDate = d => new Intl.DateTimeFormat(LANG, { day: 'numeric', month: 'short' }).format(d);
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+        /* ---------- categories (icon + colour) ---------- */
+        const ICON = {
+            chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+            gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.92.84A2 2 0 0 1 12 22a2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 8 18.6a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4 12a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 5.4 8 1.65 1.65 0 0 0 5.07 6.2l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 12 4a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09c.39 0 .76.16 1.04.43"/>',
+            food: '<path d="M3 11h18"/><path d="M5 11a7 7 0 0 1 14 0"/><path d="M4 15h16"/><path d="M5 19h14"/>',
+            users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+            shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>'
+        };
+        const CATS = [
+            { key: 'catExp',     color: 'var(--pink)',   icon: ICON.chat },
+            { key: 'catOps',     color: 'var(--bk-red)', icon: ICON.gear },
+            { key: 'catProduct', color: 'var(--green)',  icon: ICON.food },
+            { key: 'catRH',      color: 'var(--indigo)', icon: ICON.users },
+            { key: 'catHygiene', color: 'var(--teal)',   icon: ICON.shield }
+        ];
+        const CAT = Object.fromEntries(CATS.map(c => [c.key, c]));
+
+        const STATUS = {
+            new:      { key: 'stNew',      cls: 'st-new',      icon: '<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>' },
+            review:   { key: 'stReview',   cls: 'st-review',   icon: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>' },
+            approved: { key: 'stApproved', cls: 'st-approved', icon: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>' }
+        };
+
+        /* ---------- mock data ---------- */
+        let nextId = 100;
+        const ideas = [
+            { id: 1, cat: 'catExp', status: 'review', daysAgo: 2, author: 'Léa P.', likes: 12, liked: false,
+              title: 'Atelier coloriage le mercredi après-midi',
+              desc: 'Proposer des sets de coloriage avec des personnages BK tous les mercredis de 14h à 16h. Les enfants adorent et ça fidélise les familles.',
+              comments: [ { author: 'Sophie M.', daysAgo: 1, text: 'Super idée, les familles adorent !' }, { author: 'Karim B.', daysAgo: 0, text: 'On peut tester dès le mois prochain.' } ] },
+            { id: 2, cat: 'catOps', status: 'review', daysAgo: 3, author: 'Marc A.', likes: 8, liked: false,
+              title: 'Bornes de commande en terrasse',
+              desc: 'Installer deux bornes de commande sur la terrasse pour réduire la file à l\'intérieur aux heures de pointe.',
+              comments: [ { author: 'Nadia R.', daysAgo: 1, text: 'Très utile l\'été surtout.' } ] },
+            { id: 3, cat: 'catHygiene', status: 'review', daysAgo: 4, author: 'Ron J.', likes: 5, liked: false,
+              title: 'Tri sélectif des emballages carton',
+              desc: 'Mettre en place un bac dédié au carton en cuisine pour améliorer notre tri et notre score environnemental.',
+              comments: [] },
+            { id: 4, cat: 'catProduct', status: 'approved', daysAgo: 6, author: 'Chloé D.', likes: 24, liked: true,
+              title: 'Élargir le menu végétarien',
+              desc: 'Ajouter une option Veggie King en édition limitée. Beaucoup de clients le demandent à la caisse.',
+              comments: [ { author: 'Direction', daysAgo: 2, text: 'Validé — déploiement prévu ce trimestre.' }, { author: 'Joel R.', daysAgo: 1, text: 'Excellente nouvelle !' }, { author: 'Léa P.', daysAgo: 0, text: 'Enfin !' } ] },
+            { id: 5, cat: 'catRH', status: 'approved', daysAgo: 8, author: 'Sarah M.', likes: 18, liked: false,
+              title: 'Planning d\'équipe partagé sur l\'app',
+              desc: 'Publier le planning de la semaine directement dans l\'app pour que chacun consulte ses horaires en temps réel.',
+              comments: [ { author: 'Karim B.', daysAgo: 3, text: 'Adopté, dispo dès cette semaine.' }, { author: 'Marc A.', daysAgo: 2, text: 'Game changer.' } ] },
+            { id: 6, cat: 'catExp', status: 'new', daysAgo: 0, author: 'Joel R.', likes: 3, liked: false,
+              title: 'Playlist personnalisée en salle',
+              desc: 'Créer une playlist On Fire adaptée aux moments de la journée pour améliorer l\'ambiance en salle.',
+              comments: [] }
+        ];
+
+        const state = { tab: 'all' };
+        const FILTER = { all: () => true, review: i => i.status === 'review', approved: i => i.status === 'approved' };
+
+        const list = document.getElementById('list');
+        const tabsEl = document.getElementById('tabs');
+
+        function counts() {
+            return {
+                all: ideas.length,
+                review: ideas.filter(FILTER.review).length,
+                approved: ideas.filter(FILTER.approved).length
+            };
+        }
+        function renderTabs() {
+            const c = counts();
+            const defs = [ ['all', t.tabAll], ['review', t.tabReview], ['approved', t.tabApproved] ];
+            tabsEl.innerHTML = defs.map(([k, label]) =>
+                `<button class="cw-tab${state.tab === k ? ' active' : ''}" data-tab="${k}">${label}<span class="cnt">${c[k]}</span></button>`
+            ).join('');
+        }
+        function svg(inner, opts) {
+            const o = opts || {};
+            return `<svg viewBox="0 0 24 24" fill="${o.fill || 'none'}" stroke="${o.stroke || 'currentColor'}" stroke-width="${o.sw || 2}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+        }
+        function heartIcon() { return '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>'; }
+        function commentIcon() { return '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'; }
+
+        function renderComments(idea) {
+            const items = idea.comments.map(c =>
+                `<div class="comment">
+                    <div class="c-head"><span class="c-author">${esc(c.author)}</span><span class="c-date">${fmtDate(daysAgo(c.daysAgo))}</span></div>
+                    <div class="c-text">${esc(c.text)}</div>
+                </div>`).join('');
+            return `<div class="comments" data-comments="${idea.id}">
+                ${items}
+                <div class="c-form">
+                    <input type="text" placeholder="${t.addComment}" data-cinput="${idea.id}" maxlength="200">
+                    <button data-cpost="${idea.id}">${t.publish}</button>
+                </div>
+            </div>`;
+        }
+
+        function renderList() {
+            const items = ideas.filter(FILTER[state.tab]);
+            if (!items.length) { list.innerHTML = `<div class="empty">${t.empty}</div>`; return; }
+            list.innerHTML = items.map(idea => {
+                const cat = CAT[idea.cat] || CATS[0];
+                const st = STATUS[idea.status];
+                return `<div class="idea" style="border-left-color:${cat.color}">
+                    <div class="idea-top">
+                        <div class="sq-icon" style="background:${cat.color}">${svg(cat.icon)}</div>
+                        <div style="flex:1;min-width:0"><div class="idea-title">${esc(idea.title)}</div></div>
+                    </div>
+                    <div class="badges">
+                        <span class="badge badge-cat">${t[cat.key]}</span>
+                        <span class="badge ${st.cls}">${svg(st.icon, { sw: 2.4 })}${t[st.key]}</span>
+                    </div>
+                    <div class="idea-desc">${esc(idea.desc)}</div>
+                    <div class="idea-foot">
+                        <button class="act${idea.liked ? ' liked' : ''}" data-like="${idea.id}">${svg(heartIcon(), { fill: idea.liked ? 'currentColor' : 'none' })}<span>${idea.likes}</span></button>
+                        <button class="act" data-comment="${idea.id}">${svg(commentIcon())}<span>${idea.comments.length}</span></button>
+                        <span class="idea-meta">${esc(idea.author)} · ${fmtDate(daysAgo(idea.daysAgo))}</span>
+                    </div>
+                    ${renderComments(idea)}
+                </div>`;
+            }).join('');
+        }
+
+        /* ---------- interactions ---------- */
+        tabsEl.addEventListener('click', e => {
+            const b = e.target.closest('[data-tab]'); if (!b) return;
+            state.tab = b.dataset.tab; renderTabs(); renderList();
+        });
+
+        list.addEventListener('click', e => {
+            const likeB = e.target.closest('[data-like]');
+            if (likeB) {
+                const idea = ideas.find(i => i.id == likeB.dataset.like);
+                idea.liked = !idea.liked; idea.likes += idea.liked ? 1 : -1; renderList(); return;
+            }
+            const comB = e.target.closest('[data-comment]');
+            if (comB) {
+                const panel = list.querySelector(`[data-comments="${comB.dataset.comment}"]`);
+                if (panel) panel.classList.toggle('open');
+                return;
+            }
+            const postB = e.target.closest('[data-cpost]');
+            if (postB) {
+                const id = postB.dataset.cpost;
+                const input = list.querySelector(`[data-cinput="${id}"]`);
+                const val = (input.value || '').trim();
+                if (!val) return;
+                const idea = ideas.find(i => i.id == id);
+                idea.comments.push({ author: t.you, daysAgo: 0, text: val });
+                renderList();
+                const panel = list.querySelector(`[data-comments="${id}"]`);
+                if (panel) panel.classList.add('open');
+                return;
+            }
+        });
+
+        /* ---------- form modal ---------- */
+        const modal = document.getElementById('modal');
+        const catSel = document.getElementById('f-cat');
+        catSel.innerHTML = CATS.map(c => `<option value="${c.key}">${t[c.key]}</option>`).join('');
+        const fTitle = document.getElementById('f-title');
+        const fDesc = document.getElementById('f-desc');
+        const submitBtn = document.getElementById('submit-form');
+
+        function openModal() { modal.classList.add('open'); setTimeout(() => fTitle.focus(), 100); }
+        function closeModal() { modal.classList.remove('open'); }
+        function validate() { submitBtn.disabled = !(fTitle.value.trim() && fDesc.value.trim()); }
+        fTitle.addEventListener('input', validate);
+        fDesc.addEventListener('input', validate);
+        validate();
+
+        document.getElementById('open-form').addEventListener('click', openModal);
+        document.getElementById('close-form').addEventListener('click', closeModal);
+        document.getElementById('cancel-form').addEventListener('click', closeModal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+        const toast = document.getElementById('toast');
+        function showToast(msg) {
+            toast.textContent = msg; toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        submitBtn.addEventListener('click', () => {
+            const title = fTitle.value.trim(), desc = fDesc.value.trim();
+            if (!title || !desc) return;
+            ideas.unshift({
+                id: ++nextId, cat: catSel.value, status: 'new', daysAgo: 0,
+                author: t.you, likes: 0, liked: false, title, desc, comments: []
+            });
+            fTitle.value = ''; fDesc.value = ''; catSel.selectedIndex = 0; validate();
+            closeModal();
+            state.tab = 'all'; renderTabs(); renderList();
+            showToast(t.toast);
+        });
+
+        /* ---------- init ---------- */
+        applyStatic();
+        renderTabs();
+        renderList();
+    })();
+    </script>
+</body>
+</html>
